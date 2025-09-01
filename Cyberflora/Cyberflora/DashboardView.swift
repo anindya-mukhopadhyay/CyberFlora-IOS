@@ -51,6 +51,12 @@ struct DashboardView: View {
                         )
                         
                         DashboardCard(
+                            title: "Recipe Hub",
+                            icon: "cooktop.fill",
+                            destination: AnyView(Text("Cooking Recipes"))
+                        )
+                        
+                        DashboardCard(
                             title: "Eco Chatbot",
                             icon: "message.fill",
                             destination: AnyView(ChatbotView())
