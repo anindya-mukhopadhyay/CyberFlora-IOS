@@ -7,49 +7,27 @@ struct DashboardCard: View {
 
     var body: some View {
         NavigationLink(destination: destination) {
-            VStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.green.opacity(0.6), Color.green.opacity(0.3)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 70, height: 70)
-                        .shadow(color: Color.green.opacity(0.25), radius: 6, x: 0, y: 4)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 30, weight: .semibold))
-                        .foregroundColor(.white)
-                }
+            VStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 40))
+                    .foregroundColor(.green)
+                    .shadow(color: Color.green.opacity(0.3), radius: 5, x: 0, y: 3)
 
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(.headline)
                     .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, minHeight: 150)
+            .frame(maxWidth: .infinity, minHeight: 120)
             .background(
-                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color(.systemBackground), Color.green.opacity(0.05)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.green.opacity(0.2), Color.green.opacity(0.05)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 25)
-                    .stroke(Color.green.opacity(0.15), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 6)
-            .padding(.horizontal, 12)
-            .scaleEffect(0.98)
-            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: UUID())
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+            .padding(.horizontal, 8)
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }
