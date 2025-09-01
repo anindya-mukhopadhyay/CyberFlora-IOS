@@ -1,0 +1,16 @@
+//
+//  CyberfloraTests.swift
+//  CyberfloraTests
+//
+//  Created by Anindya Mukhopadhyay on 31/08/25.
+//
+
+import Testing
+
+struct CyberfloraTests {
+
+    @Test func example() async throws {
+        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    }
+
+}
