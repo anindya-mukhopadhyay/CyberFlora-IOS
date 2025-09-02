@@ -1,166 +1,147 @@
-//
-//  ProfileView.swift
-//  Cyberflora
-//
-//  Created by Anindya Mukhopadhyay on 03/09/25.
-//
 import SwiftUI
 import FirebaseAuth
-import FirebaseFirestore
 
 struct ProfileView: View {
-    @State private var email: String = ""
-    @State private var name: String = ""
-    @State private var phone: String = ""
-    @State private var dob: Date = Date()
-    @State private var age: Int = 0
-    @State private var isEditing = false
+    @State private var showingImagePicker = false
+    @State private var selectedImage: UIImage?
+    @State private var profileImageURL: URL?
+    @State private var isUploading = false
     
-    private let db = Firestore.firestore()
-    private let user = Auth.auth().currentUser
-    
+    // 🔑 Replace with your Cloudinary details
+    private let cloudName = "djoaxuvqs"
+    private let uploadPreset = "ml_default"
+
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [Color.green.opacity(0.8), Color.teal.opacity(0.6)],
-                           startPoint: .topLeading,
-                           endPoint: .bottomTrailing)
-                .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: 25) {
-                    // Profile Picture
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
-                        .foregroundColor(.white)
-                        .shadow(radius: 6)
-                    
-                    // Profile Card
-                    VStack(spacing: 18) {
-                        profileField(title: "Email", value: email, editable: false)
-                        profileField(title: "Name", value: name, editable: isEditing, key: "name")
-                        profileField(title: "Phone", value: phone, editable: isEditing, key: "phone")
-                        
-                        // DOB Picker
-                        if isEditing {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Date of Birth")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                DatePicker("", selection: $dob, displayedComponents: .date)
-                                    .datePickerStyle(.compact)
-                                    .labelsHidden()
-                                    .onChange(of: dob) { _ in
-                                        calculateAge()
-                                    }
-                            }
-                        } else {
-                            profileField(title: "Date of Birth", value: formattedDOB(), editable: false)
-                        }
-                        
-                        // Age
-                        profileField(title: "Age", value: "\(age)", editable: false)
-                    }
-                    .padding()
-                    .background(.white.opacity(0.9))
-                    .cornerRadius(20)
-                    .shadow(radius: 8)
-                    
-                    // Edit/Save Button
-                    Button(action: {
-                        if isEditing {
-                            saveProfile()
-                        }
-                        isEditing.toggle()
-                    }) {
-                        Text(isEditing ? "Save Profile" : "Edit Profile")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(isEditing ? Color.teal : Color.green)
-                            .cornerRadius(15)
-                            .shadow(radius: 5)
-                    }
+        VStack {
+            if let profileImageURL {
+                AsyncImage(url: profileImageURL) { image in
+                    image.resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                } placeholder: {
+                    ProgressView()
                 }
-                .padding()
+            } else {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 120, height: 120)
+                    .overlay(Text("No Image"))
+            }
+
+            Button("Change Profile Picture") {
+                showingImagePicker = true
+            }
+            .padding()
+
+            if isUploading {
+                ProgressView("Uploading...")
             }
         }
         .onAppear {
-            loadProfile()
-        }
-    }
-    
-    // MARK: - Components
-    private func profileField(title: String, value: String, editable: Bool, key: String? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
-            if editable, let key = key {
-                TextField(title, text: binding(for: key))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-            } else {
-                Text(value)
-                    .font(.body)
-                    .fontWeight(.medium)
+            if let url = Auth.auth().currentUser?.photoURL {
+                profileImageURL = url
             }
         }
-    }
-    
-    private func binding(for key: String) -> Binding<String> {
-        switch key {
-        case "name":
-            return $name
-        case "phone":
-            return $phone
-        default:
-            return .constant("")
+        .sheet(isPresented: $showingImagePicker) {
+            ImagePicker(image: $selectedImage, onImagePicked: uploadToCloudinary)
         }
     }
-    
-    private func formattedDOB() -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: dob)
-    }
-    
-    // MARK: - Firebase Functions
-    private func calculateAge() {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.year], from: dob, to: now)
-        age = components.year ?? 0
-    }
-    
-    private func loadProfile() {
-        guard let user = user else { return }
-        email = user.email ?? ""
+
+    private func uploadToCloudinary(_ image: UIImage) {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+        isUploading = true
         
-        db.collection("users").document(user.uid).getDocument { document, error in
-            if let data = document?.data() {
-                name = data["name"] as? String ?? ""
-                phone = data["phone"] as? String ?? ""
-                
-                if let timestamp = data["dob"] as? Timestamp {
-                    dob = timestamp.dateValue()
-                    calculateAge()
+        let url = URL(string: "https://api.cloudinary.com/v1_1/\(cloudName)/image/upload")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        // upload preset
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"upload_preset\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(uploadPreset)\r\n".data(using: .utf8)!)
+
+        // image file
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"profile.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                isUploading = false
+            }
+            if let error = error {
+                print("❌ Upload error:", error)
+                return
+            }
+            guard let data = data else { return }
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let secureUrl = json["secure_url"] as? String {
+                print("✅ Uploaded to Cloudinary:", secureUrl)
+                if let url = URL(string: secureUrl) {
+                    DispatchQueue.main.async {
+                        profileImageURL = url
+                    }
+                    updateFirebaseProfile(url: url)
                 }
-                age = data["age"] as? Int ?? age
+            } else {
+                print("❌ Failed to parse Cloudinary response:", String(data: data, encoding: .utf8) ?? "nil")
+            }
+        }.resume()
+    }
+
+    private func updateFirebaseProfile(url: URL) {
+        if let user = Auth.auth().currentUser {
+            let changeRequest = user.createProfileChangeRequest()
+            changeRequest.photoURL = url
+            changeRequest.commitChanges { error in
+                if let error = error {
+                    print("❌ Firebase update error:", error.localizedDescription)
+                } else {
+                    print("✅ Firebase profile updated")
+                }
             }
         }
     }
-    
-    private func saveProfile() {
-        guard let user = user else { return }
-        calculateAge()
-        
-        db.collection("users").document(user.uid).setData([
-            "name": name,
-            "phone": phone,
-            "dob": dob,
-            "age": age
-        ], merge: true)
+}
+
+// MARK: - Image Picker
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    var onImagePicked: (UIImage) -> Void
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.allowsEditing = true
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: ImagePicker
+        init(_ parent: ImagePicker) { self.parent = parent }
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let uiImage = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage {
+                parent.image = uiImage
+                parent.onImagePicked(uiImage)
+            }
+            picker.dismiss(animated: true)
+        }
     }
 }

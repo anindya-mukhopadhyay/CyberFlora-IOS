@@ -17,6 +17,8 @@
 		594A0A9C2E64CC8000A0EF71 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 594A0A9B2E64CC8000A0EF71 /* FirebaseStorage */; };
 		597A03042E6783B500189530 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 597A03032E6783B500189530 /* FirebaseFirestore */; };
 		597A03062E6783B500189530 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 597A03052E6783B500189530 /* FirebaseFirestoreCombine-Community */; };
+		597A03092E678DCC00189530 /* Cloudinary in Frameworks */ = {isa = PBXBuildFile; productRef = 597A03082E678DCC00189530 /* Cloudinary */; };
+		597A030B2E678F2F00189530 /* Cloudinary in Frameworks */ = {isa = PBXBuildFile; productRef = 597A030A2E678F2F00189530 /* Cloudinary */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +69,7 @@
 			files = (
 				594A0A8E2E64CC8000A0EF71 /* FirebaseAppCheck in Frameworks */,
 				594A0A922E64CC8000A0EF71 /* FirebaseCore in Frameworks */,
+				597A03092E678DCC00189530 /* Cloudinary in Frameworks */,
 				594A0A942E64CC8000A0EF71 /* FirebaseDatabase in Frameworks */,
 				597A03062E6783B500189530 /* FirebaseFirestoreCombine-Community in Frameworks */,
 				594A0A9A2E64CC8000A0EF71 /* FirebaseMLModelDownloader in Frameworks */,
@@ -81,6 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				597A030B2E678F2F00189530 /* Cloudinary in Frameworks */,
 				594A0A962E64CC8000A0EF71 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,6 +148,7 @@
 				594A0A9B2E64CC8000A0EF71 /* FirebaseStorage */,
 				597A03032E6783B500189530 /* FirebaseFirestore */,
 				597A03052E6783B500189530 /* FirebaseFirestoreCombine-Community */,
+				597A03082E678DCC00189530 /* Cloudinary */,
 			);
 			productName = Cyberflora;
 			productReference = 594A0A612E64CA8300A0EF71 /* Cyberflora.app */;
@@ -168,6 +173,7 @@
 			name = CyberfloraTests;
 			packageProductDependencies = (
 				594A0A952E64CC8000A0EF71 /* FirebaseFirestore */,
+				597A030A2E678F2F00189530 /* Cloudinary */,
 			);
 			productName = CyberfloraTests;
 			productReference = 594A0A6F2E64CA8400A0EF71 /* CyberfloraTests.xctest */;
@@ -230,6 +236,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				594A0A8C2E64CC8000A0EF71 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				597A03072E678CE200189530 /* XCRemoteSwiftPackageReference "cloudinary_ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 594A0A622E64CA8300A0EF71 /* Products */;
@@ -639,6 +646,14 @@
 				minimumVersion = 12.2.0;
 			};
 		};
+		597A03072E678CE200189530 /* XCRemoteSwiftPackageReference "cloudinary_ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cloudinary/cloudinary_ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -691,6 +706,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 594A0A8C2E64CC8000A0EF71 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = "FirebaseFirestoreCombine-Community";
+		};
+		597A03082E678DCC00189530 /* Cloudinary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 597A03072E678CE200189530 /* XCRemoteSwiftPackageReference "cloudinary_ios" */;
+			productName = Cloudinary;
+		};
+		597A030A2E678F2F00189530 /* Cloudinary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 597A03072E678CE200189530 /* XCRemoteSwiftPackageReference "cloudinary_ios" */;
+			productName = Cloudinary;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
