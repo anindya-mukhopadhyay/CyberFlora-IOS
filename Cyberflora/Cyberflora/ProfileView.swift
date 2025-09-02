@@ -14,68 +14,60 @@ struct ProfileView: View {
     @State private var phone: String = ""
     @State private var dob: Date = Date()
     @State private var age: Int = 0
-    
-    @State private var isEditing: Bool = false
-    @State private var message: String = ""
+    @State private var isEditing = false
     
     private let db = Firestore.firestore()
+    private let user = Auth.auth().currentUser
     
     var body: some View {
-        NavigationView {
+        ZStack {
+            LinearGradient(colors: [Color.green.opacity(0.8), Color.teal.opacity(0.6)],
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
             ScrollView {
                 VStack(spacing: 25) {
+                    // Profile Picture
+                    Image(systemName: "person.crop.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .foregroundColor(.white)
+                        .shadow(radius: 6)
                     
-                    // Profile Header
-                    ZStack {
-                        Circle()
-                            .fill(LinearGradient(gradient: Gradient(colors: [.green.opacity(0.6), .green]), startPoint: .top, endPoint: .bottom))
-                            .frame(width: 120, height: 120)
-                            .shadow(radius: 8)
+                    // Profile Card
+                    VStack(spacing: 18) {
+                        profileField(title: "Email", value: email, editable: false)
+                        profileField(title: "Name", value: name, editable: isEditing, key: "name")
+                        profileField(title: "Phone", value: phone, editable: isEditing, key: "phone")
                         
-                        Image(systemName: "leaf.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.top, 30)
-                    
-                    Text("My Profile")
-                        .font(.title2)
-                        .bold()
-                        .foregroundColor(.green)
-                    
-                    // Editable Fields
-                    VStack(spacing: 20) {
-                        profileField(title: "Email", value: $email, editable: false)
-                        profileField(title: "Name", value: $name, editable: isEditing)
-                        profileField(title: "Phone", value: $phone, editable: isEditing)
-                        
-                        // DOB + Age
+                        // DOB Picker
                         if isEditing {
-                            DatePicker("Date of Birth", selection: $dob, displayedComponents: .date)
-                                .datePickerStyle(.compact)
-                                .onChange(of: dob) { _ in calculateAge() }
-                                .padding()
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(12)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Date of Birth")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                DatePicker("", selection: $dob, displayedComponents: .date)
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .onChange(of: dob) { _ in
+                                        calculateAge()
+                                    }
+                            }
+                        } else {
+                            profileField(title: "Date of Birth", value: formattedDOB(), editable: false)
                         }
                         
-                        HStack {
-                            Text("Age")
-                                .font(.headline)
-                                .foregroundColor(.green)
-                            Spacer()
-                            Text("\(age) years")
-                                .foregroundColor(.black)
-                        }
-                        .padding()
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(12)
+                        // Age
+                        profileField(title: "Age", value: "\(age)", editable: false)
                     }
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 20).fill(Color.green.opacity(0.05)))
-                    .padding(.horizontal)
+                    .background(.white.opacity(0.9))
+                    .cornerRadius(20)
+                    .shadow(radius: 8)
                     
-                    // Buttons
+                    // Edit/Save Button
                     Button(action: {
                         if isEditing {
                             saveProfile()
@@ -85,90 +77,90 @@ struct ProfileView: View {
                         Text(isEditing ? "Save Profile" : "Edit Profile")
                             .font(.headline)
                             .foregroundColor(.white)
-                            .padding()
                             .frame(maxWidth: .infinity)
-                            .background(isEditing ? Color.green : Color.blue)
+                            .padding()
+                            .background(isEditing ? Color.teal : Color.green)
                             .cornerRadius(15)
-                    }
-                    .padding(.horizontal)
-                    
-                    if !message.isEmpty {
-                        Text(message)
-                            .foregroundColor(.gray)
-                            .padding(.top, 5)
+                            .shadow(radius: 5)
                     }
                 }
-                .padding(.bottom, 40)
+                .padding()
             }
-            .navigationTitle("Profile")
-            .onAppear(perform: loadProfile)
+        }
+        .onAppear {
+            loadProfile()
         }
     }
     
-    // Reusable Profile Field
-    func profileField(title: String, value: Binding<String>, editable: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+    // MARK: - Components
+    private func profileField(title: String, value: String, editable: Bool, key: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.headline)
-                .foregroundColor(.green)
-            
-            if editable {
-                TextField("Enter \(title)", text: value)
-                    .padding()
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(12)
+                .font(.caption)
+                .foregroundColor(.gray)
+            if editable, let key = key {
+                TextField(title, text: binding(for: key))
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
             } else {
-                Text(value.wrappedValue)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.green.opacity(0.05))
-                    .cornerRadius(12)
+                Text(value)
+                    .font(.body)
+                    .fontWeight(.medium)
             }
         }
     }
     
-    // Load user data from Firestore
-    func loadProfile() {
-        guard let user = Auth.auth().currentUser else { return }
+    private func binding(for key: String) -> Binding<String> {
+        switch key {
+        case "name":
+            return $name
+        case "phone":
+            return $phone
+        default:
+            return .constant("")
+        }
+    }
+    
+    private func formattedDOB() -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: dob)
+    }
+    
+    // MARK: - Firebase Functions
+    private func calculateAge() {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.year], from: dob, to: now)
+        age = components.year ?? 0
+    }
+    
+    private func loadProfile() {
+        guard let user = user else { return }
         email = user.email ?? ""
         
-        db.collection("users").document(user.uid).getDocument { doc, error in
-            if let data = doc?.data() {
+        db.collection("users").document(user.uid).getDocument { document, error in
+            if let data = document?.data() {
                 name = data["name"] as? String ?? ""
                 phone = data["phone"] as? String ?? ""
+                
                 if let timestamp = data["dob"] as? Timestamp {
                     dob = timestamp.dateValue()
                     calculateAge()
                 }
+                age = data["age"] as? Int ?? age
             }
         }
     }
     
-    // Save profile to Firestore
-    func saveProfile() {
-        guard let user = Auth.auth().currentUser else { return }
+    private func saveProfile() {
+        guard let user = user else { return }
+        calculateAge()
         
-        let profileData: [String: Any] = [
+        db.collection("users").document(user.uid).setData([
             "name": name,
             "phone": phone,
-            "dob": dob
-        ]
-        
-        db.collection("users").document(user.uid).setData(profileData, merge: true) { err in
-            if let err = err {
-                message = "Error saving profile: \(err.localizedDescription)"
-            } else {
-                message = "Profile updated successfully!"
-                calculateAge()
-            }
-        }
-    }
-    
-    // Calculate age from DOB
-    func calculateAge() {
-        let calendar = Calendar.current
-        let now = Date()
-        let ageComponents = calendar.dateComponents([.year], from: dob, to: now)
-        age = ageComponents.year ?? 0
+            "dob": dob,
+            "age": age
+        ], merge: true)
     }
 }
