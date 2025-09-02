@@ -11,140 +11,146 @@ import FirebaseFirestore
 struct ProfileView: View {
     @State private var name: String = ""
     @State private var phone: String = ""
-    @State private var age: String = ""
     @State private var email: String = ""
-    @State private var isEditing = false
-    
-    @State private var loading = true
-    @State private var message: String?
+    @State private var isEditing: Bool = false
+    @State private var message: String = ""
     
     private let db = Firestore.firestore()
     
     var body: some View {
-        VStack(spacing: 20) {
-            if loading {
-                ProgressView("Loading Profile...")
-            } else {
-                VStack(spacing: 15) {
+        ZStack {
+            // 🌿 Background Gradient
+            LinearGradient(
+                gradient: Gradient(colors: [Color.green.opacity(0.3), Color.teal.opacity(0.4)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 20) {
                     
-                    // Email (read-only)
-                    HStack {
-                        Text("Email:")
-                            .font(.headline)
-                        Spacer()
-                        Text(email)
-                            .foregroundColor(.gray)
-                    }
+                    // 🌿 Profile Icon
+                    Image(systemName: "leaf.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .foregroundStyle(.green, .white)
+                        .shadow(radius: 10)
+                        .padding(.top, 40)
                     
-                    // Name
-                    HStack {
-                        Text("Name:")
-                            .font(.headline)
-                        Spacer()
+                    // 🌿 Info Card
+                    VStack(spacing: 16) {
+                        
+                        ProfileRow(title: "Name", text: $name, isEditing: isEditing, icon: "person.fill")
+                        ProfileRow(title: "Email", text: $email, isEditing: false, icon: "envelope.fill")
+                        ProfileRow(title: "Phone", text: $phone, isEditing: isEditing, icon: "phone.fill")
+                        
                         if isEditing {
-                            TextField("Enter name", text: $name)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 200)
-                        } else {
-                            Text(name.isEmpty ? "Not set" : name)
+                            Button(action: saveProfile) {
+                                Text("Save Changes")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.green)
+                                    .cornerRadius(12)
+                                    .shadow(radius: 5)
+                            }
                         }
                     }
+                    .padding()
+                    .background(.white.opacity(0.8))
+                    .cornerRadius(20)
+                    .shadow(radius: 8)
+                    .padding(.horizontal)
                     
-                    // Phone
-                    HStack {
-                        Text("Phone:")
-                            .font(.headline)
-                        Spacer()
-                        if isEditing {
-                            TextField("Enter phone", text: $phone)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.phonePad)
-                                .frame(width: 200)
-                        } else {
-                            Text(phone.isEmpty ? "Not set" : phone)
-                        }
-                    }
-                    
-                    // Age
-                    HStack {
-                        Text("Age:")
-                            .font(.headline)
-                        Spacer()
-                        if isEditing {
-                            TextField("Enter age", text: $age)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.numberPad)
-                                .frame(width: 200)
-                        } else {
-                            Text(age.isEmpty ? "Not set" : age)
-                        }
-                    }
-                    
-                    if let msg = message {
-                        Text(msg)
-                            .foregroundColor(.blue)
-                            .font(.subheadline)
-                    }
-                    
-                    Spacer()
-                    
+                    // 🌿 Edit / Cancel Button
                     Button(action: {
-                        if isEditing {
-                            saveProfile()
-                        }
                         isEditing.toggle()
                     }) {
-                        Text(isEditing ? "Save" : "Edit Profile")
+                        Text(isEditing ? "Cancel" : "Edit Profile")
                             .font(.headline)
-                            .frame(maxWidth: .infinity)
+                            .foregroundColor(.green)
                             .padding()
-                            .background(isEditing ? Color.green : Color.blue)
-                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .background(.white)
                             .cornerRadius(12)
+                            .shadow(radius: 5)
+                    }
+                    .padding(.horizontal)
+                    
+                    if !message.isEmpty {
+                        Text(message)
+                            .foregroundColor(.green)
+                            .font(.subheadline)
+                            .padding(.top, 10)
                     }
                 }
-                .padding()
             }
         }
-        .onAppear {
-            fetchProfile()
-        }
-        .navigationTitle("Profile")
+        .onAppear(perform: loadProfile)
+        .navigationTitle("My Profile 🌱")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
-    // Fetch profile data
-    private func fetchProfile() {
+    // 🌿 Load Profile from Firestore
+    private func loadProfile() {
         guard let user = Auth.auth().currentUser else { return }
         email = user.email ?? ""
         
-        let docRef = db.collection("users").document(user.uid)
-        docRef.getDocument { document, error in
-            loading = false
-            if let document = document, document.exists {
-                let data = document.data()
-                self.name = data?["name"] as? String ?? ""
-                self.phone = data?["phone"] as? String ?? ""
-                self.age = data?["age"] as? String ?? ""
-            } else {
-                self.message = "No profile data found."
+        db.collection("users").document(user.uid).getDocument { doc, error in
+            if let doc = doc, doc.exists {
+                self.name = doc["name"] as? String ?? ""
+                self.phone = doc["phone"] as? String ?? ""
             }
         }
     }
     
-    // Save profile data
+    // 🌿 Save Profile Updates
     private func saveProfile() {
         guard let user = Auth.auth().currentUser else { return }
         
-        let docRef = db.collection("users").document(user.uid)
-        docRef.setData([
+        db.collection("users").document(user.uid).setData([
             "name": name,
             "phone": phone,
-            "age": age
-        ], merge: true) { error in
-            if let error = error {
-                self.message = "Error saving: \(error.localizedDescription)"
+            "email": email
+        ], merge: true) { err in
+            if let err = err {
+                message = "❌ Error: \(err.localizedDescription)"
             } else {
-                self.message = "Profile updated successfully!"
+                message = "✅ Profile updated successfully!"
+                isEditing = false
+            }
+        }
+    }
+}
+
+// 🌿 Reusable Row
+struct ProfileRow: View {
+    var title: String
+    @Binding var text: String
+    var isEditing: Bool
+    var icon: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.green)
+                .frame(width: 30)
+            
+            if isEditing {
+                TextField(title, text: $text)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+            } else {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text(text.isEmpty ? "Not set" : text)
+                        .font(.body)
+                        .foregroundColor(.black)
+                }
             }
         }
     }
