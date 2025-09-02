@@ -17,7 +17,7 @@ struct DashboardView: View {
                         DashboardCard(
                             title: "Profile",
                             icon: "person.crop.circle.fill",
-                            destination: AnyView(Text("Profile Screen"))
+                            destination: AnyView(ProfileView())
                         )
                         
                         DashboardCard(
