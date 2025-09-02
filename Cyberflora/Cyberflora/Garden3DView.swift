@@ -1,31 +1,22 @@
-//
-//  Garden3DView.swift
-//  Cyberflora
-//
-//  Created by Anindya Mukhopadhyay on 01/09/25.
-//
-
 import SwiftUI
+import WebKit
 
-struct Garden3DView: View {
-    var body: some View {
-        VStack {
-            Text("📚 3D Garden (Education)")
-                .font(.largeTitle)
-                .padding()
-
-            Text("Interactive 3D garden showcasing plants and their information.")
-                .multilineTextAlignment(.center)
-                .padding()
-
-            Spacer()
-
-            Text("🌳 3D Garden Placeholder (Integrate 3D SceneKit/RealityKit here)")
-                .padding()
-                .foregroundColor(.gray)
-
-            Spacer()
+struct Garden3DView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        if let url = URL(string: "https://d-garden-92743.web.app/") {
+            webView.load(URLRequest(url: url))
         }
-        .navigationTitle("3D Garden")
+        return webView
+    }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
+}
+
+struct GardenView: View {
+    var body: some View {
+        Garden3DView()
+            .edgesIgnoringSafeArea(.all)
     }
 }
+

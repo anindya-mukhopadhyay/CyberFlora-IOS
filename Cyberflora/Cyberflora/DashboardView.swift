@@ -40,8 +40,8 @@ struct DashboardView: View {
                         
                         DashboardCard(
                             title: "3D Garden",
-                            icon: "cube.fill",
-                            destination: AnyView(Text("3D Garden Screen"))
+                            icon: "rotate.3d.circle",
+                            destination: AnyView(Garden3DView())
                         )
                         
                         DashboardCard(
@@ -73,6 +73,12 @@ struct DashboardView: View {
                             icon: "bell.fill",
                             destination: AnyView(Text("Reminders & Notifications"))
                         )
+                        DashboardCard(
+                            title: "Ayurvedic Shops",
+                            icon: "cart.circle",
+                            destination: AnyView(Text("Ayurvedic Shops"))
+                        )
+                        
                         // 🌿 New Feature: AR/VR
                         DashboardCard(title: "AR/VR Experience",
                             icon: "arkit",
@@ -86,7 +92,7 @@ struct DashboardView: View {
                         DashboardCard(
                             title: "Settings",
                             icon: "gearshape.fill",
-                            destination: AnyView(Text("Settings Screen"))
+                            destination: AnyView(SettingsView())
                         )
                     }
                     .padding()

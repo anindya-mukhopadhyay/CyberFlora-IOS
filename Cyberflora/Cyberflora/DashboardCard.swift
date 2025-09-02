@@ -11,7 +11,7 @@ struct DashboardCard: View {
                 Image(systemName: icon)
                     .font(.system(size: 40))
                     .foregroundColor(.green)
-                    .shadow(color: Color.green.opacity(0.3), radius: 5, x: 0, y: 3)
+                    .shadow(color: Color.black.opacity(0.6), radius: 5, x: 0, y: 3)
 
                 Text(title)
                     .font(.headline)
