@@ -23,7 +23,7 @@ struct DashboardView: View {
                         DashboardCard(
                             title: "Plant Detection",
                             icon: "leaf.fill",
-                            destination: AnyView(Text("Plant Detection Screen"))
+                            destination: AnyView(PlantDetectionView())
                         )
                         
                         DashboardCard(
