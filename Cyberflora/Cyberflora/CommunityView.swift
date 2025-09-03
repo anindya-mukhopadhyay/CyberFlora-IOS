@@ -1,10 +1,3 @@
-//
-//  CommunityView.swift
-//  Cyberflora
-//
-//  Created by Anindya Mukhopadhyay on 01/09/25.
-//
-
 import SwiftUI
 
 struct CommunityView: View {
