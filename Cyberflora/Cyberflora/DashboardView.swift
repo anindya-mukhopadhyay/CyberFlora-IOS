@@ -47,7 +47,7 @@ struct DashboardView: View {
                         DashboardCard(
                             title: "Community",
                             icon: "person.3.fill",
-                            destination: AnyView(Text("Community Forum"))
+                            destination: AnyView(CommunityView())
                         )
                         
                         DashboardCard(
