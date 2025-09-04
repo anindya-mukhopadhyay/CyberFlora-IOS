@@ -1,11 +1,3 @@
-//
-//  CyberFloraApp 2.swift
-//  Cyberflora
-//
-//  Created by Anindya Mukhopadhyay on 01/09/25.
-//
-
-
 import SwiftUI
 import Firebase
 
